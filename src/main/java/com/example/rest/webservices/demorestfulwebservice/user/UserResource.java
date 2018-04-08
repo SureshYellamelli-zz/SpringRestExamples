@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +26,12 @@ public class UserResource {
 
 	@GetMapping("/users/{id}")
 	public User findUser(@PathVariable int id) {
-		return userdao.findOne(id);
+		User user = userdao.findOne(id);
+		
+		if(null == user)
+			throw new UserNotFoundException(String.format("ID %s not found",id));
+		
+		return user;
 	}
 
 	@PostMapping("/users")
@@ -37,4 +43,11 @@ public class UserResource {
 		return ResponseEntity.created(location).build();
 	}
 
+	@DeleteMapping("/users/{id}")
+	public void deleteUser(@PathVariable int id) {
+		User user = userdao.deleteById(id);
+		if(null == user)
+			throw new UserNotFoundException(String.format("ID %s not found",id));
+		
+	}
 }
