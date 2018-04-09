@@ -3,7 +3,12 @@ package com.example.rest.webservices.demorestfulwebservice.user;
 import java.net.URI;
 import java.util.List;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,19 +30,19 @@ public class UserResource {
 	}
 
 	@GetMapping("/users/{id}")
-	public User findUser(@PathVariable int id) {
-		User user = userdao.findOne(id);
-		
+	public Resource<User> findUser(@PathVariable int id) {
+		User user = userdao.findOne(id);		
 		if(null == user)
 			throw new UserNotFoundException(String.format("ID %s not found",id));
-		
-		return user;
+		Resource<User> resource = new Resource<User>(user);
+		ControllerLinkBuilder linkTo = linkTo(methodOn(this.getClass()).retrieveAllUsers());
+		resource.add(linkTo.withRel("all-users"));
+		return resource;
 	}
 
 	@PostMapping("/users")
-	public ResponseEntity<Object> addUser(@RequestBody User user) {
+	public ResponseEntity<Object> addUser(@Valid @RequestBody User user) {
 		User savedUser = userdao.save(user);
-
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
 				.buildAndExpand(savedUser.getNumber()).toUri();
 		return ResponseEntity.created(location).build();
